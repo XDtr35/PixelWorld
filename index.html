@@ -3,16 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Piksel World!</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Büyük Piksel Çizim Oyunu</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            overflow: hidden; /* Kaydırmayı engelle */
+        }
+        canvas {
+            border: 1px solid black;
+            image-rendering: pixelated;
+            cursor: pointer;
+            touch-action: none;
+        }
+        .color-picker {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
+        }
+    </style>
 </head>
 <body>
+
     <canvas id="canvas"></canvas>
+
     <div class="color-picker">
         <label for="color">Renk Seç:</label>
         <input type="color" id="color" value="#ff0000">
     </div>
 
-    <script type="module" src="script.js"></script>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const colorPicker = document.getElementById("color");
+
+        const pixelSize = 10;  // Piksel büyüklüğü
+        const width = 100;      // Piksel sayısı (genişlik)
+        const height = 100;     // Piksel sayısı (yükseklik)
+
+        canvas.width = width * pixelSize;
+        canvas.height = height * pixelSize;
+
+        // Pikselleri LocalStorage'dan yükle
+        let pixels = JSON.parse(localStorage.getItem("pixels")) || 
+                     Array.from({ length: height }, () => Array(width).fill("#ffffff"));
+
+        function drawCanvas() {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    ctx.fillStyle = pixels[y][x];
+                    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+
+        function updatePixel(x, y) {
+            if (x >= 0 && x < width && y >= 0 && y < height) {
+                pixels[y][x] = colorPicker.value;
+                drawCanvas();
+                localStorage.setItem("pixels", JSON.stringify(pixels)); // Kaydet
+            }
+        }
+
+        function getCursorPosition(e) {
+            const rect = canvas.getBoundingClientRect();
+            let x = Math.floor((e.clientX - rect.left) / pixelSize);
+            let y = Math.floor((e.clientY - rect.top) / pixelSize);
+            return { x, y };
+        }
+
+        // Fare tıklaması
+        canvas.addEventListener("click", (e) => {
+            const { x, y } = getCursorPosition(e);
+            updatePixel(x, y);
+        });
+
+        // Dokunmatik ekran desteği
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const { x, y } = getCursorPosition(touch);
+            updatePixel(x, y);
+        });
+
+        // Sayfa açılınca çizimi geri yükle
+        drawCanvas();
+    </script>
+
 </body>
 </html>
