@@ -3,31 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Büyük Piksel Çizim Oyunu</title>
-    <style>
-        body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            overflow: hidden; /* Kaydırmayı engelle */
-        }
-        canvas {
-            border: 1px solid black;
-            image-rendering: pixelated;
-            cursor: pointer;
-            touch-action: none;
-        }
-        .color-picker {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
-        }
-    </style>
+    <title>Piksel World!</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <canvas id="canvas"></canvas>
@@ -35,99 +12,7 @@
         <label for="color">Renk Seç:</label>
         <input type="color" id="color" value="#ff0000">
     </div>
-    
-    <script type="module">
-        // Firebase'i başlatmak için gerekli importlar
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
-        
-        // Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyCMhOiJCpl8RPTFot5Ew-4NfZeriqTbkIc",
-            authDomain: "pixelworld-564de.firebaseapp.com",
-            databaseURL: "https://pixelworld-564de-default-rtdb.firebaseio.com",
-            projectId: "pixelworld-564de",
-            storageBucket: "pixelworld-564de.firebasestorage.app",
-            messagingSenderId: "1065315037661",
-            appId: "1:1065315037661:web:c3f279a215c45bdc658634",
-            measurementId: "G-CFH0K3SKRX"
-        };
 
-        // Firebase'i başlatma
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        const colorPicker = document.getElementById("color");
-        const pixelSize = 10;  // Piksel büyüklüğü
-        const width = 100;      // Piksel sayısı (genişlik)
-        const height = 100;     // Piksel sayısı (yükseklik)
-        canvas.width = width * pixelSize;
-        canvas.height = height * pixelSize;
-
-        // Firebase'den veri yükleme ve ayarlama
-        let pixels = JSON.parse(localStorage.getItem("pixels")) || Array.from({ length: height }, () => Array(width).fill("#ffffff"));
-
-        function drawCanvas() {
-            for (let y = 0; y < height; y++) {
-                for (let x = 0; x < width; x++) {
-                    ctx.fillStyle = pixels[y][x];
-                    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-
-                    // Mazgal çizme
-                    ctx.strokeStyle = '#000'; // Mazgalın rengi
-                    ctx.lineWidth = 1; // Mazgalın kalınlığı
-                    ctx.strokeRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize); // Çevreye çizgi ekle
-                }
-            }
-        }
-
-        function updatePixel(x, y) {
-            if (x >= 0 && x < width && y >= 0 && y < height) {
-                pixels[y][x] = colorPicker.value;
-                drawCanvas();
-                localStorage.setItem("pixels", JSON.stringify(pixels)); // Kaydet
-
-                // Firebase'e kaydetme
-                set(ref(database, 'pixels/'), {
-                    pixels: pixels
-                });
-            }
-        }
-
-        function getCursorPosition(e) {
-            const rect = canvas.getBoundingClientRect();
-            let x = Math.floor((e.clientX - rect.left) / pixelSize);
-            let y = Math.floor((e.clientY - rect.top) / pixelSize);
-            return { x, y };
-        }
-
-        // Fare tıklaması
-        canvas.addEventListener("click", (e) => {
-            const { x, y } = getCursorPosition(e);
-            updatePixel(x, y);
-        });
-
-        // Dokunmatik ekran desteği
-        canvas.addEventListener("touchstart", (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const { x, y } = getCursorPosition(touch);
-            updatePixel(x, y);
-        });
-
-        // Firebase'den veri alıp canvas'a yüklemek
-        const pixelsRef = ref(database, 'pixels/');
-        get(pixelsRef).then((snapshot) => {
-            if (snapshot.exists()) {
-                pixels = snapshot.val().pixels;
-                drawCanvas();
-            }
-        });
-
-        // Sayfa açılınca çizimi geri yükle
-        drawCanvas();
-    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
